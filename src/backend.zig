@@ -5,7 +5,6 @@
 
 const builtin = @import("builtin");
 
-// TODO: Implement import that switches on OS
 pub const backend = switch (builtin.os.tag) {
     .windows => @import("backend/windows.zig"),
     else => @import("backend/unimplemented.zig"),
