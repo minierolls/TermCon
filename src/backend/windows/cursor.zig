@@ -20,7 +20,7 @@ pub fn getPosition() !Position {
 }
 
 pub fn setPosition(position: Position) !void {
-    var coord = windows.COORD{ .X = position.col, .Y = position.row };
+    var coord = windows.COORD{ .X = @intCast(i16, position.col), .Y = @intCast(i16, position.row) };
     if (windows.kernel32.SetConsoleCursorPosition(root.hConsole, coord) == 0) return error.SetCursorFailed;
 }
 

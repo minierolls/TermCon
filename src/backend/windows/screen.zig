@@ -6,8 +6,8 @@
 //! This module handles provides functions to interface with the terminal
 //! screen.
 
-const root = @import("../windows.zig");
 const view = @import("../../view.zig");
+const root = @import("../windows.zig");
 
 const std = @import("std");
 const windows = std.os.windows;
@@ -21,8 +21,8 @@ pub fn getSize() !Size {
     var csbi = try getScreenBufferInfo();
 
     var size = Size {
-        .rows = @intCast(u16, csbi.srWindow.Right - csbi.srWindow.Left + 1),
-        .cols = @intCast(u16, csbi.srWindow.Bottom - csbi.srWindow.Top + 1)
+        .cols = @intCast(u16, csbi.srWindow.Right - csbi.srWindow.Left + 1),
+        .rows = @intCast(u16, csbi.srWindow.Bottom - csbi.srWindow.Top + 1)
     };
 
     return size;
@@ -31,7 +31,20 @@ pub fn getSize() !Size {
 /// Write styled text to the screen at the cursor's position,
 /// moving the cursor accordingly.
 pub fn write(runes: []const Rune, styles: []const Style) !void {
-    std.debug.assert(runes.len == styles.len);
+    var csbi = try getScreenBufferInfo();
+    var coord: windows.COORD = csbi.dwCursorPosition;
+    var chars_written = @as(windows.DWORD, 0);
+
+    std.debug.warn("coord.Y: {} srWindow.Top: {}   +: {}\n", .{coord.Y, csbi.srWindow.Top, coord.Y + csbi.srWindow.Top});
+    coord.Y += csbi.srWindow.Top;
+
+    var index: u32 = 0;
+    while (index < runes.len) : (index += 1) {
+        coord.X += @intCast(i16, index); // TODO: handle newlines
+
+        if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsole, @intCast(windows.TCHAR, runes[index].value), 1, coord, &chars_written) == 0)
+            return error.FailToWriteChar;
+    }
 }
 
 /// Clear all runes and styles on the screen.
