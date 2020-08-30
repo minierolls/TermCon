@@ -35,15 +35,15 @@ pub fn write(runes: []const Rune, styles: []const Style) !void {
     var coord: windows.COORD = csbi.dwCursorPosition;
     var chars_written = @as(windows.DWORD, 0);
 
-    std.debug.warn("coord.Y: {} srWindow.Top: {}   +: {}\n", .{coord.Y, csbi.srWindow.Top, coord.Y + csbi.srWindow.Top});
-    coord.Y += csbi.srWindow.Top;
+    // std.debug.warn("coord.Y: {} srWindow.Top: {}   +: {}\n", .{coord.Y, csbi.srWindow.Top, coord.Y + csbi.srWindow.Top});
+    // coord.Y += csbi.srWindow.Top;
 
     var index: u32 = 0;
     while (index < runes.len) : (index += 1) {
-        coord.X += @intCast(i16, index); // TODO: handle newlines
-
-        if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsole, @intCast(windows.TCHAR, runes[index].value), 1, coord, &chars_written) == 0)
+        if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsoleOut, @intCast(windows.TCHAR, runes[index]), 1, coord, &chars_written) == 0)
             return error.FailToWriteChar;
+        
+        coord.X += 1; // TODO: handle newlines
     }
 }
 
@@ -64,20 +64,20 @@ pub fn clearScreen() !void {
     // var console_size = @intCast(u32, (csbi.srWindow.Right - csbi.srWindow.Left + 1) * (csbi.srWindow.Bottom - csbi.srWindow.Top + 1));
 
     // Fill screen with blanks
-    if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsole, @as(windows.TCHAR, ' '), console_size, start_pos, &chars_written) == 0) {
+    if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsoleOut, @as(windows.TCHAR, ' '), console_size, start_pos, &chars_written) == 0) {
         return error.SomeDrawError; // TODO: seriously need real errors
     }
 
     // Get the current text attribute
     // csbi = try getScreenBufferInfo();
 
-    if (windows.kernel32.FillConsoleOutputAttribute(root.hConsole, csbi.wAttributes, console_size, start_pos, &chars_written) == 0) {
+    if (windows.kernel32.FillConsoleOutputAttribute(root.hConsoleOut, csbi.wAttributes, console_size, start_pos, &chars_written) == 0) {
         return error.SomeDrawError;
     }
 }
 
 pub fn getScreenBufferInfo() !windows.kernel32.CONSOLE_SCREEN_BUFFER_INFO {
     var csbi: windows.kernel32.CONSOLE_SCREEN_BUFFER_INFO = undefined;
-    if (windows.kernel32.GetConsoleScreenBufferInfo(root.hConsole, &csbi) == 0) return error.FailedToGetBufferInfo;
+    if (windows.kernel32.GetConsoleScreenBufferInfo(root.hConsoleOut, &csbi) == 0) return error.FailedToGetBufferInfo;
     return csbi;
 }
