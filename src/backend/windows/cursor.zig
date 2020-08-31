@@ -22,12 +22,12 @@ pub fn getPosition() !Position {
 pub fn setPosition(position: Position) !void {
     var csbi = try root.screen.getScreenBufferInfo();
     var coord = windows.COORD{ .X = @intCast(i16, position.col) + csbi.srWindow.Left, .Y = @intCast(i16, position.row) + csbi.srWindow.Top };
-    if (windows.kernel32.SetConsoleCursorPosition(root.hConsoleOut, coord) == 0) return error.SetCursorFailed;
+    if (windows.kernel32.SetConsoleCursorPosition(root.hConsoleOutCurrent orelse return error.Handle, coord) == 0) return error.SetCursorFailed;
 }
 
 pub fn getVisibility() !bool {
     var cursor_info: windows.CONSOLE_CURSOR_INFO = undefined;
-    if (windows.kernel32.GetConsoleCursorInfo(root.hConsoleOut, &cursor_info) == 0) return error.GetCursorVisibility;
+    if (windows.kernel32.GetConsoleCursorInfo(root.hConsoleOutCurrent orelse return error.Handle, &cursor_info) == 0) return error.GetCursorVisibility;
     return cursor_info.bVisible;
 }
 
@@ -36,5 +36,5 @@ pub fn setVisibility(visible: bool) !void {
         .dwSize = 100,
         .bVisible = visible
     };
-    if (windows.kernel32.SetConsoleCursorInfo(root.hConsoleOut, &cursor_info) == 0) return error.SetCursorVisibility;
+    if (windows.kernel32.SetConsoleCursorInfo(root.hConsoleOutCurrent orelse return error.Handle, &cursor_info) == 0) return error.SetCursorVisibility;
 }

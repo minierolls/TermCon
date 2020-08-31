@@ -37,14 +37,14 @@ pub fn write(runes: []const Rune, styles: []const Style) !void {
 
     var index: u32 = 0;
     while (index < runes.len) : (index += 1) {
-        if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsoleOut, @intCast(windows.TCHAR, runes[index]), 1, coord, &chars_written) == 0)
+        if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsoleOutCurrent orelse return error.Handle, @intCast(windows.TCHAR, runes[index]), 1, coord, &chars_written) == 0)
             return error.FailToWriteChar;
         
         coord.X += 1; // TODO: handle newlines
     }
 
     // Set new cursor position
-    if (windows.kernel32.SetConsoleCursorPosition(root.hConsoleOut, coord) == 0) return error.SetCursorFailed;
+    if (windows.kernel32.SetConsoleCursorPosition(root.hConsoleOutCurrent orelse return error.Handle, coord) == 0) return error.SetCursorFailed;
 }
 
 /// Clear all runes and styles on the screen.
@@ -64,20 +64,20 @@ pub fn clearScreen() !void {
     // var console_size = @intCast(u32, (csbi.srWindow.Right - csbi.srWindow.Left + 1) * (csbi.srWindow.Bottom - csbi.srWindow.Top + 1));
 
     // Fill screen with blanks
-    if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsoleOut, @as(windows.TCHAR, ' '), console_size, start_pos, &chars_written) == 0) {
+    if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsoleOutCurrent orelse return error.Handle, @as(windows.TCHAR, ' '), console_size, start_pos, &chars_written) == 0) {
         return error.SomeDrawError; // TODO: seriously need real errors
     }
 
     // Get the current text attribute
     // csbi = try getScreenBufferInfo();
 
-    if (windows.kernel32.FillConsoleOutputAttribute(root.hConsoleOut, csbi.wAttributes, console_size, start_pos, &chars_written) == 0) {
+    if (windows.kernel32.FillConsoleOutputAttribute(root.hConsoleOutCurrent orelse return error.Handle, csbi.wAttributes, console_size, start_pos, &chars_written) == 0) {
         return error.SomeDrawError;
     }
 }
 
 pub fn getScreenBufferInfo() !windows.kernel32.CONSOLE_SCREEN_BUFFER_INFO {
     var csbi: windows.kernel32.CONSOLE_SCREEN_BUFFER_INFO = undefined;
-    if (windows.kernel32.GetConsoleScreenBufferInfo(root.hConsoleOut, &csbi) == 0) return error.FailedToGetBufferInfo;
+    if (windows.kernel32.GetConsoleScreenBufferInfo(root.hConsoleOutCurrent orelse return error.Handle, &csbi) == 0) return error.FailedToGetBufferInfo;
     return csbi;
 }
