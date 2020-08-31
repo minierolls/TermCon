@@ -32,12 +32,12 @@ pub const TermCon = struct {
     pub fn init(allocator: *std.mem.Allocator, options: Options) !TermCon {
         var supported_features = try backend.init();
 
-        if (options.raw_mode) {
-            try backend.config.setRawMode(true);
-        }
-
         if (options.alternate_screen) {
             try backend.config.setAlternateScreen(true);
+        }
+
+        if (options.raw_mode) {
+            try backend.config.setRawMode(true);
         }
 
         var screen = try view.Screen.init(allocator, null);
