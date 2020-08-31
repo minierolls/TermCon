@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: MIT
 // This file is part of the `termcon` project under the MIT license.
 
-// WINAPI define not made in standard library as of Zig commit 84d50c892
+// WINAPI defines not made in standard library as of Zig commit 84d50c892
 pub extern "kernel32" fn SetConsoleMode(hConsoleHandle: windows.HANDLE, dwMode: windows.DWORD) callconv(.Stdcall) windows.BOOL;
+// pub extern "kernel32" fn WriteConsoleOutputCharacter(hConsoleOutput: windows.HANDLE, lpCharacter: windows.LPCTSTR, nLength: windows.DWORD, dwWriteCoord: windows.COORD, lpNumberOfCharsWritten: windows.LPDWORD) callconv(.Stdcall) windows.BOOL;
 
 pub const config = @import("windows/config.zig");
 pub const cursor = @import("windows/cursor.zig");
@@ -19,7 +20,6 @@ pub const SupportedFeatures = termcon.SupportedFeatures;
 
 pub var hConsoleOut: std.os.windows.HANDLE = undefined;
 pub var hConsoleIn: std.os.windows.HANDLE = undefined;
-var raw_mode_enabled: bool = false;
 
 pub fn init() !SupportedFeatures {
     hConsoleOut = try std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE);

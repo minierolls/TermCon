@@ -14,13 +14,14 @@ pub const Position = view.Position;
 pub fn getPosition() !Position {
     var csbi = try root.screen.getScreenBufferInfo();
     return Position {
-        .row = @intCast(u16, csbi.dwCursorPosition.Y),
-        .col = @intCast(u16, csbi.dwCursorPosition.X)
+        .row = @intCast(u16, csbi.dwCursorPosition.Y - csbi.srWindow.Top),
+        .col = @intCast(u16, csbi.dwCursorPosition.X - csbi.srWindow.Left)
     };
 }
 
 pub fn setPosition(position: Position) !void {
-    var coord = windows.COORD{ .X = @intCast(i16, position.col), .Y = @intCast(i16, position.row) };
+    var csbi = try root.screen.getScreenBufferInfo();
+    var coord = windows.COORD{ .X = @intCast(i16, position.col) + csbi.srWindow.Left, .Y = @intCast(i16, position.row) + csbi.srWindow.Top };
     if (windows.kernel32.SetConsoleCursorPosition(root.hConsoleOut, coord) == 0) return error.SetCursorFailed;
 }
 

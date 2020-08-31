@@ -35,9 +35,6 @@ pub fn write(runes: []const Rune, styles: []const Style) !void {
     var coord: windows.COORD = csbi.dwCursorPosition;
     var chars_written = @as(windows.DWORD, 0);
 
-    // std.debug.warn("coord.Y: {} srWindow.Top: {}   +: {}\n", .{coord.Y, csbi.srWindow.Top, coord.Y + csbi.srWindow.Top});
-    // coord.Y += csbi.srWindow.Top;
-
     var index: u32 = 0;
     while (index < runes.len) : (index += 1) {
         if (windows.kernel32.FillConsoleOutputCharacterA(root.hConsoleOut, @intCast(windows.TCHAR, runes[index]), 1, coord, &chars_written) == 0)
@@ -45,6 +42,9 @@ pub fn write(runes: []const Rune, styles: []const Style) !void {
         
         coord.X += 1; // TODO: handle newlines
     }
+
+    // Set new cursor position
+    if (windows.kernel32.SetConsoleCursorPosition(root.hConsoleOut, coord) == 0) return error.SetCursorFailed;
 }
 
 /// Clear all runes and styles on the screen.
