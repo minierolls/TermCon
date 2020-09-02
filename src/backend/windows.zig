@@ -20,29 +20,28 @@ const windows = std.os.windows;
 const termcon = @import("../termcon.zig");
 pub const SupportedFeatures = termcon.SupportedFeatures;
 
-pub var hConsoleOutCurrent: ?windows.HANDLE = null; // This variable should be used by functions.
+pub var hConsoleOutCurrent: ?windows.HANDLE = null; // hConsoleOutCurrent is to be used publicly.
 pub var hConsoleOutMain:    ?windows.HANDLE = null; // hConsoleOutMain and hConsoleOutAlt are specific handles for
-pub var hConsoleOutAlt:     ?windows.HANDLE = null; // the primary and secondary consoles.
+pub var hConsoleOutAlt:     ?windows.HANDLE = null; // the primary and secondary console screen buffers.
 pub var hConsoleIn:         ?windows.HANDLE = null;
+
+var restore_console_mode: windows.DWORD = undefined; // To restore the state of the console on exit
 
 pub fn init() !SupportedFeatures {
     hConsoleOutMain = try std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE);
     hConsoleOutCurrent = hConsoleOutMain;
     hConsoleIn = try std.os.windows.GetStdHandle(std.os.windows.STD_INPUT_HANDLE);
+    restore_console_mode = windows.kernel32.GetConsoleMode(hConsoleOutMain, &restore_console_mode);
 
     return SupportedFeatures{ .mouse_events = true };
 }
 
 pub fn deinit() void {
-    config.setAlternateScreen(false) catch return;
-    if (hConsoleOutAlt != undefined) {
+    try config.setAlternateScreen(false) catch {};
+    if (hConsoleOutAlt != null) {
         if (hConsoleOutAlt) |handle| {
             _ = windows.kernel32.CloseHandle(handle);
         }
     }
-    config.setRawMode(false) catch return;
-}
-
-pub fn setAlternateScreen(value: bool) !void {
-    return; // TODO: implement
+    if (SetConsoleMode(hConsoleOutMain orelse return, restore_console_mode) == 0) return;
 }
