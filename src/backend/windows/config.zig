@@ -27,12 +27,15 @@ const ENABLE_VIRTUAL_TERMINAL_PROCESSING: windows.DWORD = 0x0004;
 const DISABLE_NEWLINE_AUTO_RETURN: windows.DWORD = 0x0008;
 const ENABLE_LVB_GRID_WORLDWIDE: windows.DWORD = 0x0010;
 
+var in_raw_mode = false;
+
 pub fn getRawMode() bool {
-    @compileError("Unimplemented");
+    return in_raw_mode;
 }
 
 pub fn setRawMode(enabled: bool) !void {
     std.debug.assert(root.hConsoleOutCurrent != null);
+    in_raw_mode = enabled;
     if (enabled) {
         if (root.SetConsoleMode(root.hConsoleIn orelse return error.Handle, ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT | ENABLE_VIRTUAL_TERMINAL_INPUT) == 0) return error.Failed;
         if (root.SetConsoleMode(root.hConsoleOutCurrent orelse return error.Handle, ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN) == 0) return error.Failed;
